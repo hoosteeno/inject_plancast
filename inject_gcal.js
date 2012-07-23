@@ -1,38 +1,143 @@
-    google.load("gdata", "1");
+(function(jq){
 
-    google.setOnLoadCallback(get_feed);
+  jq.fn.inject_gcal = function(options) {
 
-    var service;
-
-    var feed_url = "http://www.google.com/calendar/feeds/dojo4.com_hee2vs2nomkifsc16j5p39g0gs%40group.calendar.google.com/public/full?alt=json-in-script&max-results=25&singleevents=false&futureevents=true&sortorder=ascending&orderby=starttime";
-
-    function setup_service() {
-      service = new google.gdata.calendar.CalendarService('exampleCo-exampleApp-1');
+    var required = [
+      'key',
+      'gcal_id'
+    ]
+    for (i=0; i<required.length; i++) {
+      if (options[required[i]] == null && options.data[required[i]] == null) {
+        throw new Error('inject_gcal: ' + required[i] + ' is required');
+      }
     }
 
-    function get_feed() {
-      setup_service();
-      service.getEventsFeed(feed_url, handle_feed, handle_error);
-    }
 
-    function handle_feed(data) {
-      $(data.feed.entry).each(function() {
-        var entry = this;
+    options = jq.extend(true, {}, jq.fn.inject_gcal.default_options, options);
 
-        var timestamp = entry.gd$when[0].startTime;
-        var date = new Date(timestamp);
-        var zone_free_time = date.toString();
-        console.log(zone_free_time);
+console.log(options);
 
-        console.log(entry.gd$when[0].startTime);
-        console.log(entry.gd$where[0].valueString);
-        console.log(entry.title.$t);
+    var error = false;
 
-        console.log(entry);
+    var enforce_timeout = window.setTimeout(function (){
+      generate_error(options.down_template);
+    }, options.timeout);
+
+    function get_cal_events() {
+      $.ajax({
+        url: "https://www.googleapis.com/calendar/v3/calendars/"+options.gcal_id+"/events",
+        success: function(data) {
+          handle_response(data);
+        },
+        data: options.data
       });
     }
 
-    function handle_error(e) {
-      alert("There was an error!");
-      alert(e.cause ? e.cause.statusText : e.message);
+    function enhance_cal_event(cal_event) {
+/*
+        get its start time
+        get its timezone
+          if no timezone, then its in the calendar's default timezone
+        convert the start/end times to the timezone specified
+*/
+
+      return 'hi';
+
     }
+
+    function generate_error(template) {
+      if (! error) {
+
+        if (options.loading_msg != null) {
+          jq(options.loading_msg).remove();
+        }
+
+        error = true;
+        element.append(Mustache.render(template, ""));
+      }
+    }
+
+    var element = this;
+    var cal_events = [];
+
+    get_cal_events();
+
+    function handle_response(result) {
+      console.log(result);
+
+      if (! error) {
+
+        //if (result.meta.status != 200) {
+        if (true) {
+          generate_error(options.down_template);
+        }
+
+        else if (result.response.cal_events.length == 0) {
+          generate_error(options.no_cal_events_template);
+        }
+
+        else {
+
+          window.clearTimeout(enforce_timeout);
+
+          if (options.loading_msg != null) {
+            jq(options.loading_msg).remove();
+          }
+
+          cal_events = result.items;
+
+          jq(cal_events).map(function() { 
+            var cal_event = this;
+
+            cal_event = enhance_cal_event(cal_event);
+
+            if (options.templatize == true) {
+              cal_event = Mustache.render(options.cal_event_template, cal_event);
+            }
+
+            element.append(cal_event);
+
+            return cal_event;
+          });
+        }
+      }
+    };
+
+    return element;
+
+  }
+
+  jq.fn.inject_gcal.cal_event_template = '<article><figure><a href="{{cal_event_url}}"><img src="{{first_picture}}"></a></figure><div><h3><a href="{{cal_event_url}}">{{title}}</a></h3><time datetime="{{iso_date}}">{{human_date}}</time>{{{blurb}}}<a href="{{cal_event_url}}">More &raquo;</a></div></article>';
+  jq.fn.inject_gcal.down_template = '<article><h3>Uh oh..</h3><div>It looks like gcal is down right now. Please refresh your browser window in a little while.</div></article>';
+  jq.fn.inject_gcal.no_cal_events_template = '<article><h3>No cal_events yet!</h3><div>This blog is empty right now. Please check again soon!</div></article>';
+
+  jq.fn.inject_gcal.today = function() {
+    // get a string for today
+    var d = new Date;
+    var month = '0'+(parseInt(d.getMonth())+1);
+    month = month.substring(month.length-2, month.length);
+    return d.getFullYear()+'-'+month+'-'+d.getDate()+'T00:00:00.000Z';
+  }
+
+  jq.fn.inject_gcal.default_options = {
+
+    timeout: 5000,
+    templatize: true,
+    loading_msg: '',
+    cal_event_template: jq.fn.inject_gcal.cal_event_template,
+    down_template: jq.fn.inject_gcal.down_template,
+    no_cal_events_template: jq.fn.inject_gcal.no_cal_events_template,
+    gcal_id: '',
+
+    data: {
+      orderBy: 'startTime',
+      singleEvents: 'true',
+      timeMin: jq.fn.inject_gcal.today(),
+      timeZone: 'GMT',
+      key: '',
+      max_results: '25'
+    }
+  }
+
+
+})(jQuery);
