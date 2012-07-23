@@ -15,7 +15,6 @@
 
     options = jq.extend(true, {}, jq.fn.inject_gcal.default_options, options);
 
-console.log(options);
 
     var error = false;
 
@@ -24,8 +23,9 @@ console.log(options);
     }, options.timeout);
 
     function get_cal_events() {
-      $.ajax({
+      jq.ajax({
         url: "https://www.googleapis.com/calendar/v3/calendars/"+options.gcal_id+"/events",
+        dataType: 'json',
         success: function(data) {
           handle_response(data);
         },
@@ -41,8 +41,12 @@ console.log(options);
         convert the start/end times to the timezone specified
 */
 
-      return 'hi';
+      event_start = cal_event.start.dateTime;
+      event_timezone = cal_event.start.timeZone || default_timezone;
 
+console.log(event_timezone);
+
+      return cal_event;
     }
 
     function generate_error(template) {
@@ -59,24 +63,21 @@ console.log(options);
 
     var element = this;
     var cal_events = [];
+    var default_timezone;
 
     get_cal_events();
 
     function handle_response(result) {
-      console.log(result);
 
       if (! error) {
 
-        //if (result.meta.status != 200) {
-        if (true) {
-          generate_error(options.down_template);
-        }
-
-        else if (result.response.cal_events.length == 0) {
+        if (result.items.length == 0) {
           generate_error(options.no_cal_events_template);
         }
 
         else {
+
+console.log(result);
 
           window.clearTimeout(enforce_timeout);
 
@@ -84,6 +85,7 @@ console.log(options);
             jq(options.loading_msg).remove();
           }
 
+          default_timezone = result.timeZone;
           cal_events = result.items;
 
           jq(cal_events).map(function() { 
