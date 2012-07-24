@@ -5,15 +5,14 @@
     <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
     <script src='https://raw.github.com/janl/mustache.js/master/mustache.js'></script>
 
-    <script src='../inject_gcal.js'></script>
+    <script src='../inject_plancast.js'></script>
 
     <script>
       $(document).ready(function() {
-        $('#gcal').inject_gcal({
+        $('#plancast').inject_plancast({
           loading_msg: '.loading',
-          gcal_id: 'dojo4.com_hee2vs2nomkifsc16j5p39g0gs@group.calendar.google.com',
           data: {
-            key: 'AIzaSyBBSfPpUCCNKfF7jksXAm4ohMEA315sdE8'
+            username: 'hoosteeno',
           }
         });
       });
@@ -21,8 +20,8 @@
       
   </head>
   <body>
-    <div id="gcal">
-      <h2 class="loading">The gcal be loading...</h2>
+    <div id="plancast">
+      <h2 class="loading">The plancast be loading...</h2>
     </div>
   </body>
 </html>
