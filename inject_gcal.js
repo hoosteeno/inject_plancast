@@ -41,10 +41,11 @@
         convert the start/end times to the timezone specified
 */
 
-      event_start = cal_event.start.dateTime;
+      utc_start = cal_event.start.dateTime;
       event_timezone = cal_event.start.timeZone || default_timezone;
 
-console.log(event_timezone);
+console.log(timezone);
+console.log(utc_start);
 
       return cal_event;
     }
@@ -76,8 +77,6 @@ console.log(event_timezone);
         }
 
         else {
-
-console.log(result);
 
           window.clearTimeout(enforce_timeout);
 
