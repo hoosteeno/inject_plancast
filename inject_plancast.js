@@ -43,12 +43,12 @@
 
       start_date = new Date(parseInt(cal_event.start*1000));
       cal_event.iso_start_date = start_date.toISOString();
-      cal_event.human_start_time = start_date.getUTCHours() + ":" + p0(start_date.getUTCMinutes());
+      cal_event.human_start_time = p0(start_date.getUTCHours()) + ":" + p0(start_date.getUTCMinutes());
       cal_event.human_start_date = p1(start_date.getUTCMonth()) + "/" + start_date.getUTCDate() + "/" + start_date.getUTCFullYear();
 
       end_date = new Date(parseInt(cal_event.stop*1000));
       cal_event.iso_end_date = end_date.toISOString();
-      cal_event.human_end_time = end_date.getUTCHours() + ":" + p0(end_date.getUTCMinutes());
+      cal_event.human_end_time = p0(end_date.getUTCHours()) + ":" + p0(end_date.getUTCMinutes());
       cal_event.human_end_date = p1(end_date.getUTCMonth()) + "/" + end_date.getUTCDate() + "/" + end_date.getUTCFullYear();
 
       if (cal_event.place != null) {
