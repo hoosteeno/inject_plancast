@@ -81,7 +81,11 @@
 
       if (! error) {
 
-        if (result.plans.length == 0) {
+        if (result.plans == null) {
+          generate_error(options.down_template);
+        }
+
+        else if (result.plans.length == 0) {
           generate_error(options.no_cal_events_template);
         }
 
