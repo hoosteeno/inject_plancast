@@ -19,7 +19,7 @@
       generate_error(options.down_template);
     }, options.timeout);
 
-    function get_cal_events() {
+    function get_plans() {
       jq.ajax({
         url: "http://api.plancast.com/02/plans/user.json",
         dataType: 'jsonp',
@@ -31,7 +31,7 @@
       });
     }
 
-    function enhance_cal_event(cal_event) {
+    function enhance_plan(plan) {
       function p1(i) {
         return ""+(parseInt(i)+1);
       }
@@ -41,22 +41,23 @@
         return r.substring(r.length - 2, r.length);
       }
 
-      start_date = new Date(parseInt(cal_event.start*1000));
-      cal_event.iso_start_date = start_date.toISOString();
-      cal_event.human_start_time = p0(start_date.getUTCHours()) + ":" + p0(start_date.getUTCMinutes());
-      cal_event.human_start_date = p1(start_date.getUTCMonth()) + "/" + start_date.getUTCDate() + "/" + start_date.getUTCFullYear();
+      start_date = new Date(parseInt(plan.start*1000));
+      plan.iso_start_date = start_date.toISOString();
+      plan.human_start_time = p0(start_date.getUTCHours()) + ":" + p0(start_date.getUTCMinutes());
+      plan.human_start_date = p1(start_date.getUTCMonth()) + "/" + start_date.getUTCDate() + "/" + start_date.getUTCFullYear();
 
-      end_date = new Date(parseInt(cal_event.stop*1000));
-      cal_event.iso_end_date = end_date.toISOString();
-      cal_event.human_end_time = p0(end_date.getUTCHours()) + ":" + p0(end_date.getUTCMinutes());
-      cal_event.human_end_date = p1(end_date.getUTCMonth()) + "/" + end_date.getUTCDate() + "/" + end_date.getUTCFullYear();
-
-      if (cal_event.place != null) {
-        cal_event.maps_url = "http://maps.google.com/maps?q=" + escape(cal_event.place.address);
+      if (plan.start != plan.stop) {
+        end_date = new Date(parseInt(plan.stop*1000));
+        plan.iso_end_date = end_date.toISOString();
+        plan.human_end_time = p0(end_date.getUTCHours()) + ":" + p0(end_date.getUTCMinutes());
+        plan.human_end_date = p1(end_date.getUTCMonth()) + "/" + end_date.getUTCDate() + "/" + end_date.getUTCFullYear();
       }
 
-      console.log(cal_event);
-      return cal_event;
+      if (plan.place != null) {
+        plan.maps_url = "http://maps.google.com/maps?q=" + escape(plan.place.address);
+      }
+
+      return plan;
     }
 
     function generate_error(template) {
@@ -72,10 +73,10 @@
     }
 
     var element = this;
-    var cal_events = [];
+    var plans = [];
     var default_timezone;
 
-    get_cal_events();
+    get_plans();
 
     function handle_response(result) {
 
@@ -86,7 +87,7 @@
         }
 
         else if (result.plans.length == 0) {
-          generate_error(options.no_cal_events_template);
+          generate_error(options.no_plans_template);
         }
 
         else {
@@ -97,20 +98,20 @@
             jq(options.loading_msg).remove();
           }
 
-          cal_events = result.plans;
+          plans = result.plans;
 
-          jq(cal_events).map(function() { 
-            var cal_event = this;
+          jq(plans).map(function() { 
+            var plan = this;
 
-            cal_event = enhance_cal_event(cal_event);
+            plan = enhance_plan(plan);
 
             if (options.templatize == true) {
-              cal_event = Mustache.render(options.cal_event_template, cal_event);
+              plan = Mustache.render(options.plan_template, plan);
             }
 
-            element.append(cal_event);
+            element.append(plan);
 
-            return cal_event;
+            return plan;
           });
         }
       }
@@ -120,17 +121,17 @@
 
   }
 
-  jq.fn.inject_plancast.cal_event_template = '<article><div><h3><a href="{{attendance_url}}">{{what}}</a></h3><time datetime="{{iso_date}}">{{human_start_time}}{{#human_end_time}} - {{human_end_time}},{{/human_end_time}} {{human_start_date}}</time> <span class="location">{{where}}</span> {{description}} {{#external_url}}(More information <a href="{{external_url}}">here</a>.){{/external_url}}{{#maps_url}}(<a href="{{maps_url}}">Map</a>){{/maps_url}}</div></article>';
+  jq.fn.inject_plancast.plan_template = '<article><div><h3><a href="{{attendance_url}}">{{what}}</a></h3><time datetime="{{iso_date}}">{{human_start_time}}{{#human_end_time}} - {{human_end_time}},{{/human_end_time}} {{human_start_date}}</time> <span class="location">{{where}}</span> {{description}} {{#external_url}}(More information <a href="{{external_url}}">here</a>.){{/external_url}}{{#maps_url}}(<a href="{{maps_url}}">Map</a>){{/maps_url}}</div></article>';
   jq.fn.inject_plancast.down_template = '<article><h3>Uh oh..</h3><div>It looks like the event calendar is down right now. Please refresh your browser window in a little while.</div></article>';
-  jq.fn.inject_plancast.no_cal_events_template = '<article><h3>No events!</h3><div>There are no upcoming events. Please check again soon!</div></article>';
+  jq.fn.inject_plancast.no_plans_template = '<article><h3>No events!</h3><div>There are no upcoming events. Please check again soon!</div></article>';
 
   jq.fn.inject_plancast.default_options = {
     timeout: 5000,
     templatize: true,
     loading_msg: '',
-    cal_event_template: jq.fn.inject_plancast.cal_event_template,
+    plan_template: jq.fn.inject_plancast.plan_template,
     down_template: jq.fn.inject_plancast.down_template,
-    no_cal_events_template: jq.fn.inject_plancast.no_cal_events_template,
+    no_plans_template: jq.fn.inject_plancast.no_plans_template,
 
     data: {
       username: '',
