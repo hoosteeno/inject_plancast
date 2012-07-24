@@ -32,12 +32,29 @@
     }
 
     function enhance_cal_event(cal_event) {
-      cal_event.date = new Date(parseInt(cal_event.start*1000));
-      cal_event.iso_date = cal_event.date.toISOString();
-      cal_event.human_date = cal_event.date.toDateString();
+      function p1(i) {
+        return ""+(parseInt(i)+1);
+      }
+
+      function p0(i) {
+        r = ("0"+i);
+        return r.substring(r.length - 2, r.length);
+      }
+
+      start_date = new Date(parseInt(cal_event.start*1000));
+      cal_event.iso_start_date = start_date.toISOString();
+      cal_event.human_start_time = start_date.getUTCHours() + ":" + p0(start_date.getUTCMinutes());
+      cal_event.human_start_date = p1(start_date.getUTCMonth()) + "/" + start_date.getUTCDate() + "/" + start_date.getUTCFullYear();
+
+      end_date = new Date(parseInt(cal_event.stop*1000));
+      cal_event.iso_end_date = end_date.toISOString();
+      cal_event.human_end_time = end_date.getUTCHours() + ":" + p0(end_date.getUTCMinutes());
+      cal_event.human_end_date = p1(end_date.getUTCMonth()) + "/" + end_date.getUTCDate() + "/" + end_date.getUTCFullYear();
+
       if (cal_event.place != null) {
         cal_event.maps_url = "http://maps.google.com/maps?q=" + escape(cal_event.place.address);
       }
+
       console.log(cal_event);
       return cal_event;
     }
@@ -99,7 +116,7 @@
 
   }
 
-  jq.fn.inject_plancast.cal_event_template = '<article><div><h3><a href="{{attendance_url}}">{{what}}</a></h3><time datetime="{{iso_date}}">{{human_date}}</time><span class="location">{{where}}</span>{{description}} {{#external_url}}(More information <a href="{{external_url}}">here</a>.){{/external_url}}{{#maps_url}}(<a href="{{maps_url}}">Map</a>){{/maps_url}}</div></article>';
+  jq.fn.inject_plancast.cal_event_template = '<article><div><h3><a href="{{attendance_url}}">{{what}}</a></h3><time datetime="{{iso_date}}">{{human_start_time}}{{#human_end_time}} - {{human_end_time}},{{/human_end_time}} {{human_start_date}}</time> <span class="location">{{where}}</span> {{description}} {{#external_url}}(More information <a href="{{external_url}}">here</a>.){{/external_url}}{{#maps_url}}(<a href="{{maps_url}}">Map</a>){{/maps_url}}</div></article>';
   jq.fn.inject_plancast.down_template = '<article><h3>Uh oh..</h3><div>It looks like the event calendar is down right now. Please refresh your browser window in a little while.</div></article>';
   jq.fn.inject_plancast.no_cal_events_template = '<article><h3>No events!</h3><div>There are no upcoming events. Please check again soon!</div></article>';
 
